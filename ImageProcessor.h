@@ -1,6 +1,7 @@
 //----------------------------------------------------------------------
 // VMouse - OpenCV Virtual Mouse (HCI)
 // Copyright (C) 2014  Kunal Dawn <kunal.dawn@gmail.com>
+// Copyright (C) 2014  Medha Devaraj <medha.devaraj@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,13 +43,19 @@ private:
     // contains number of frames for which mouse down gesture has been made
     int framesWithMouseDownActivationCounter;
     // contains number of frames for which mouse down gesture has not been made
-    int framesWithMouseDownDeactivationOunter;
+    int framesWithMouseDownDeactivationCounter;
+    // contains number of frames for which right click gesture has been made
+    int framesWithRightClickActivationCounter;
+    // contains number of frames for which right click gesture has not been made
+    int framesWithRightClickDeactivationCounter;
     // contains number of frames for which mouse events reset is requested
     int framesWithResetCounter;
     // indicates if mouse button is down
     bool isMouseDown;
     // indicates if mouse click is activated
     bool isClickActivated;
+    // indicates if mouse right click is activated
+    bool isRightClickActivated;
     // indicates if mouse double click is activated
     bool isDoubleClickActivated;
     // desktop widget to get desktop screen size

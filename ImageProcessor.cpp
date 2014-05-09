@@ -1,6 +1,7 @@
 //----------------------------------------------------------------------
 // VMouse - OpenCV Virtual Mouse (HCI)
 // Copyright (C) 2014  Kunal Dawn <kunal.dawn@gmail.com>
+// Copyright (C) 2014  Medha Devaraj <medha.devaraj@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,6 +30,8 @@ ImageProcessor::ImageProcessor()
     //------------------------------------------------------
     // set variables to defaults
     //------------------------------------------------------
+    // set right click event to false
+    isRightClickActivated = false;
     // set mouse down event to false
     isMouseDown = false;
     // set mouse click event to false
@@ -36,17 +39,21 @@ ImageProcessor::ImageProcessor()
     // set mouse double click event to false
     isDoubleClickActivated = false;
     // set mouse down deactivation counter to zero
-    framesWithMouseDownDeactivationOunter = 0;
+    framesWithMouseDownDeactivationCounter = 0;
     // set mouse down activation counter to zero
     framesWithMouseDownActivationCounter = 0;
     // set mouse click activation counter to zero
     framesWithClickActivationCounter = 0;
     // set mouse click deactivation counter to zero
-    framesWithDoubleClickDeactivationCounter = 0;
+    framesWithClickDeactivationCounter = 0;
     // set mouse double click activation counter to zero
     framesWithDoubleClickActivationCounter = 0;
     // set mouse double click deactivation counter to zero
-    framesWithClickDeactivationCounter = 0;
+    framesWithDoubleClickDeactivationCounter = 0;
+    // set mouse right click activation counter to zero
+    framesWithRightClickActivationCounter = 0;
+    // set mouse right click deactivation counter to zero
+    framesWithRightClickDeactivationCounter = 0;
     // set mouse event reset counter to zero
     framesWithResetCounter = 0;
 }
@@ -505,7 +512,9 @@ void ImageProcessor::generateMouseEvents()
                     !isMouseDown &&
                     framesWithMouseDownActivationCounter == 0 &&
                     !isDoubleClickActivated &&
-                    framesWithDoubleClickActivationCounter == 0 )
+                    framesWithDoubleClickActivationCounter == 0 &&
+                    !isRightClickActivated &&
+                    framesWithRightClickActivationCounter == 0)
             {
                 // reset the deactivation counter for single click becuse activation is going to start
                 framesWithClickDeactivationCounter = 0;
@@ -531,7 +540,9 @@ void ImageProcessor::generateMouseEvents()
                     !isMouseDown &&
                     framesWithMouseDownActivationCounter == 0 &&
                     !isClickActivated &&
-                    framesWithClickActivationCounter == 0 )
+                    framesWithClickActivationCounter == 0 &&
+                    !isRightClickActivated &&
+                    framesWithRightClickActivationCounter == 0)
             {
                 // reset the deactivation counter for double click becuse activation is going to start
                 framesWithDoubleClickDeactivationCounter = 0;
@@ -553,14 +564,16 @@ void ImageProcessor::generateMouseEvents()
                 }
             }
             // check if conditions met for activating click and hold
-            else if((finalPoints.size() == 2 || finalPoints.size() == 3) &&
+            else if(finalPoints.size() == 3 &&
                     !isDoubleClickActivated &&
                     framesWithDoubleClickActivationCounter == 0 &&
                     !isClickActivated &&
-                    framesWithClickActivationCounter == 0 )
+                    framesWithClickActivationCounter == 0 &&
+                    !isRightClickActivated &&
+                    framesWithRightClickActivationCounter == 0)
             {
                 // reset the mouse down deactivation counter
-                framesWithMouseDownDeactivationOunter = 0;
+                framesWithMouseDownDeactivationCounter = 0;
                 // check if already mouse is not down
                 if(!isMouseDown)
                 {
@@ -575,6 +588,34 @@ void ImageProcessor::generateMouseEvents()
                         isMouseDown = true;
                         // generate mouse down event
                         mouseManager.mouseEvent("mousedown",1);
+                    }
+                }
+            }
+            // check if conditions met for activating right click
+            else if(finalPoints.size() == 2 &&
+                    !isMouseDown &&
+                    framesWithMouseDownActivationCounter == 0 &&
+                    !isClickActivated &&
+                    framesWithClickActivationCounter == 0 &&
+                    !isDoubleClickActivated &&
+                    framesWithDoubleClickActivationCounter == 0)
+            {
+                // reset the deactivation counter for right click becuse activation is going to start
+                framesWithRightClickDeactivationCounter = 0;
+                // check if already right click is not activated to prevent continious right clicks
+                if(!isRightClickActivated)
+                {
+                    // increment the right click activation counter
+                    framesWithRightClickActivationCounter ++;
+                    // check if the counter exceeds the event activation threshold
+                    if(framesWithRightClickActivationCounter >= SystemConfiguration::fea_thresh)
+                    {
+                        // reset the right click activation counter
+                        framesWithRightClickActivationCounter = 0;
+                        // mark that right ckick is activated to prevent multiple right clicks until its de activated
+                        isRightClickActivated = true;
+                        // generate the right click event
+                        mouseManager.mouseEvent("click",2);
                     }
                 }
             }
@@ -613,7 +654,7 @@ void ImageProcessor::generateMouseEvents()
             else if(isMouseDown)
             {
                 // check if mouse down deactivation counter exceeds threshold
-                if(framesWithMouseDownDeactivationOunter >= SystemConfiguration::fed_thresh)
+                if(framesWithMouseDownDeactivationCounter >= SystemConfiguration::fed_thresh)
                 {
                     // set the flag to indicate that mouse is up
                     isMouseDown = false;
@@ -622,7 +663,23 @@ void ImageProcessor::generateMouseEvents()
                 }else
                 {
                     // increment the mouse down deactivation counter
-                    framesWithMouseDownDeactivationOunter ++;
+                    framesWithMouseDownDeactivationCounter ++;
+                }
+            }
+            // check if double click is activated
+            else if(isRightClickActivated)
+            {
+                // check if the right click deactivation counter exceeds the deactivation threshold
+                if(framesWithRightClickDeactivationCounter >= SystemConfiguration::fed_thresh)
+                {
+                    // set flag to indicate that previous right click is deactivated and new right click is allowed
+                    isDoubleClickActivated = false;
+                }
+                // deactivation counter do not exceed threshold
+                else
+                {
+                    // increment the right click deactivation counter
+                    framesWithRightClickDeactivationCounter ++;
                 }
             }
             else if(!isClickActivated && framesWithClickActivationCounter > 0)
@@ -658,7 +715,7 @@ void ImageProcessor::generateMouseEvents()
             else if(!isMouseDown && framesWithMouseDownActivationCounter > 0)
             {
                 // check if mouse down deactivation counter exceeds threshold
-                if(framesWithMouseDownDeactivationOunter >= SystemConfiguration::fed_thresh)
+                if(framesWithMouseDownDeactivationCounter >= SystemConfiguration::fed_thresh)
                 {
                     // reset mouse down activation counter
                     framesWithMouseDownActivationCounter = 0;
@@ -667,8 +724,23 @@ void ImageProcessor::generateMouseEvents()
                 else
                 {
                     // increment mouse down deactivation counter
-                    framesWithMouseDownDeactivationOunter ++;
+                    framesWithMouseDownDeactivationCounter ++;
                 }
+            }
+        }
+        else if(!isRightClickActivated && framesWithRightClickActivationCounter > 0)
+        {
+            // check if the right click deactivation counter exceeds the deactivation threshold
+            if(framesWithRightClickDeactivationCounter >= SystemConfiguration::fed_thresh)
+            {
+                // then reject the activation request by setting it to zero
+                framesWithRightClickDeactivationCounter = 0;
+            }
+            // click deactivation counter dosent exceeds the deactivation threshold
+            else
+            {
+                // increment the deactivation counter
+                framesWithRightClickDeactivationCounter ++;
             }
         }
         // points are out of bound
@@ -687,13 +759,16 @@ void ImageProcessor::generateMouseEvents()
                 isMouseDown = false;
                 isClickActivated = false;
                 isDoubleClickActivated = false;
+                isRightClickActivated = false;
                 // reset counters
                 framesWithDoubleClickActivationCounter = 0;
                 framesWithDoubleClickDeactivationCounter = 0;
-                framesWithMouseDownDeactivationOunter = 0;
+                framesWithMouseDownDeactivationCounter = 0;
                 framesWithMouseDownActivationCounter = 0;
                 framesWithClickDeactivationCounter = 0;
                 framesWithClickDeactivationCounter = 0;
+                framesWithRightClickActivationCounter = 0;
+                framesWithRightClickDeactivationCounter = 0;
             }else
             {
                 // increment the reset counter

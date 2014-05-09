@@ -1,6 +1,7 @@
 #----------------------------------------------------------------------
 # VMouse - OpenCV Virtual Mouse (HCI)
 # Copyright (C) 2014  Kunal Dawn <kunal.dawn@gmail.com>
+# Copyright (C) 2014  Medha Devaraj <medha.devaraj@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

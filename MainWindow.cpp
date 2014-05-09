@@ -1,6 +1,7 @@
 //----------------------------------------------------------------------
 // VMouse - OpenCV Virtual Mouse (HCI)
 // Copyright (C) 2014  Kunal Dawn <kunal.dawn@gmail.com>
+// Copyright (C) 2014  Medha Devaraj <medha.devaraj@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,6 +37,28 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     configWindow = NULL;
+}
+
+void MainWindow::startAutoMode(int devId)
+{
+    ui->inputCameraId->setDisabled(true);
+    cameraId = devId;
+    // initialize the capture device
+    captureDevice = VideoCapture(cameraId);
+
+    // check if the device is accessable
+    if(!captureDevice.isOpened())
+    {
+        // create a new message box
+        QMessageBox messageBox(this);
+        // show warning message
+        messageBox.warning(this,"Warning","Can not open Camera Device",QMessageBox::Ok);
+        // return from this function as capture device is not correct
+        return;
+    }
+
+    // every thing is ok, start capturing
+    startProcessing();
 }
 
 MainWindow::~MainWindow()

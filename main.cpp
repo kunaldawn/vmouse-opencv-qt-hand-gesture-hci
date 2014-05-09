@@ -1,6 +1,7 @@
 //----------------------------------------------------------------------
 // VMouse - OpenCV Virtual Mouse (HCI)
 // Copyright (C) 2014  Kunal Dawn <kunal.dawn@gmail.com>
+// Copyright (C) 2014  Medha Devaraj <medha.devaraj@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,6 +18,7 @@
 //----------------------------------------------------------------------
 #include "MainWindow.h"
 #include <QApplication>
+#include <sstream>
 
 
 int main(int argc, char *argv[])
@@ -24,6 +26,12 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
-    
+    if(argc == 2)
+    {
+        istringstream ss(argv[1]);
+        int id =0;
+        ss >> id;
+        w.startAutoMode(id);
+    }
     return a.exec();
 }
